@@ -4,6 +4,7 @@
 const DEFAULT_INVITATION = {
   slug: "vo-nguyen-minh-quan",
   name: "Võ Nguyễn Minh Quân",
+  hostName: "Võ Nguyễn Minh Quân",
   age: 2026,
   countdownDate: "2026-04-23T18:00:00+07:00",
   dateISO: "2026-04-23",
@@ -31,6 +32,12 @@ const CONFIG = {
   eventDate: new Date(DEFAULT_INVITATION.countdownDate),
   particleCount: 100,
   confettiCount: 50,
+  playlist: [
+    "music/thapphonktudo.mp3",
+    "music/valentired.mp3",
+    "music/thapphonktudo.mp3",
+    "music/valentired.mp3",
+  ],
   colors: {
     primary: "#3b82f6",
     secondary: "#93c5fd",
@@ -47,6 +54,8 @@ const STATE = {
   isCardFlipped: false,
   isMusicPlaying: false,
   audio: null,
+  playlist: [],
+  currentTrackIndex: 0,
   playMusic: null,
   pauseMusic: null,
   particles: [],
@@ -68,7 +77,9 @@ const DOM = {
   openCard: document.getElementById("openCard"),
   closeCard: document.getElementById("closeCard"),
   musicToggle: document.getElementById("musicToggle"),
-  musicButton: document.querySelector(".gra_inv__music-button"),
+  musicPlayPause: document.getElementById("musicPlayPause"),
+  musicPlayPauseIcon: document.getElementById("musicPlayPauseIcon"),
+  musicButton: document.getElementById("musicToggle"),
   canvas: document.getElementById("canvas"),
   particles: document.getElementById("particles"),
   countdown: {
@@ -83,11 +94,18 @@ const DOM = {
     label: document.getElementById("shareButtonLabel"),
     link: document.getElementById("shareLink"),
   },
+  welcome: {
+    overlay: document.getElementById("welcomeOverlay"),
+    form: document.getElementById("welcomeForm"),
+    input: document.getElementById("welcomeNameInput"),
+    hint: document.getElementById("welcomeHint"),
+  },
 };
 
 const DYNAMIC = {
   avatar: document.getElementById("guestAvatar"),
   name: document.getElementById("guestName"),
+  invitee: document.getElementById("guestInvitee"),
   age: document.getElementById("guestAge"),
   dateDisplay: document.getElementById("eventDateDisplay"),
   timeRange: document.getElementById("eventTimeRange"),
@@ -95,6 +113,21 @@ const DYNAMIC = {
   mapLink: document.getElementById("eventMapLink"),
   message: document.getElementById("guestMessage"),
 };
+
+function setInviteeGreeting(nameValue) {
+  if (!DYNAMIC.invitee) {
+    return;
+  }
+
+  const inviteeName =
+    typeof nameValue === "string" ? nameValue.trim().replace(/\s+/g, " ") : "";
+
+  // Sử dụng escapeHtml để bảo mật dữ liệu đầu vào
+  const safeName = escapeHtml(inviteeName || "Bạn");
+
+  // Đổi textContent thành innerHTML và thêm thẻ <strong>
+  DYNAMIC.invitee.innerHTML = `Thân mời bạn iu: <strong>${safeName}</strong>, đến làm diễn viên quần chúng, nhan sắc của bạn sẽ làm nền giúp bức ảnh cầm bằng của tui thêm phần lấp lánh! 😘`;
+}
 
 // ===================================
 // Particle System
@@ -348,6 +381,53 @@ function createConfettiBurst() {
 }
 
 // ===================================
+// Welcome Screen
+// ===================================
+function initWelcomeOverlay(invitation) {
+  const welcome = DOM.welcome;
+  if (!welcome.overlay || !welcome.form || !welcome.input) {
+    return;
+  }
+
+  const hideOverlay = () => {
+    welcome.overlay.classList.add("gra_inv__welcome-overlay--hidden");
+    welcome.overlay.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("gra_inv__body--locked");
+  };
+
+  if (invitation?.hasValidQueryGuest) {
+    setInviteeGreeting(invitation.inviteeName || invitation.name);
+    hideOverlay();
+    return;
+  }
+
+  welcome.form.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const typedName = welcome.input.value.trim().replace(/\s+/g, " ");
+    if (!typedName) {
+      if (welcome.hint) {
+        welcome.hint.textContent = "Vui lòng nhập tên trước khi tiếp tục.";
+      }
+      welcome.input.focus();
+      return;
+    }
+
+    setInviteeGreeting(typedName);
+
+    if (welcome.hint) {
+      welcome.hint.textContent = "";
+    }
+
+    hideOverlay();
+  });
+
+  requestAnimationFrame(() => {
+    welcome.input.focus();
+  });
+}
+
+// ===================================
 // Countdown Timer
 // ===================================
 function initCountdown() {
@@ -399,42 +479,97 @@ function initMusicPlayer() {
     return;
   }
 
-  const audioSrc = DOM.musicButton.dataset.audioSrc;
-  DOM.musicToggle.setAttribute("aria-pressed", "false");
+  const playlist = (CONFIG.playlist || [])
+    .map((track) => resolveAssetPath(track))
+    .filter(Boolean);
 
-  if (!audioSrc) {
-    console.warn(
-      "Không tìm thấy đường dẫn nhạc. Hãy gán data-audio-src cho nút nhạc.",
-    );
+  if (!playlist.length) {
+    console.warn("Không tìm thấy bài hát trong CONFIG.playlist.");
     DOM.musicButton.classList.add("gra_inv__music-button--paused");
     return;
   }
 
-  STATE.audio = new Audio(audioSrc);
-  STATE.audio.loop = true;
+  STATE.playlist = playlist;
+  STATE.currentTrackIndex = 0;
+
+  STATE.audio = new Audio(STATE.playlist[STATE.currentTrackIndex]);
+  STATE.audio.loop = false;
   STATE.audio.preload = "auto";
   STATE.audio.volume = 0.4;
 
+  const updateMusicUI = () => {
+    if (STATE.isMusicPlaying) {
+      DOM.musicButton.classList.remove("gra_inv__music-button--paused");
+    } else {
+      DOM.musicButton.classList.add("gra_inv__music-button--paused");
+    }
+
+    const nextTrackNumber =
+      ((STATE.currentTrackIndex + 1) % STATE.playlist.length) + 1;
+    DOM.musicToggle.setAttribute(
+      "aria-label",
+      `Chuyển sang bài số ${nextTrackNumber}`,
+    );
+
+    if (DOM.musicPlayPause && DOM.musicPlayPauseIcon) {
+      DOM.musicPlayPause.setAttribute(
+        "aria-label",
+        STATE.isMusicPlaying ? "Tạm dừng nhạc" : "Phát nhạc",
+      );
+      DOM.musicPlayPause.setAttribute(
+        "aria-pressed",
+        String(STATE.isMusicPlaying),
+      );
+      DOM.musicPlayPauseIcon.innerHTML = STATE.isMusicPlaying
+        ? "&#10074;&#10074;"
+        : "&#9658;";
+    }
+  };
+
+  const setTrack = (index) => {
+    if (!STATE.audio || !STATE.playlist.length) {
+      return;
+    }
+
+    const normalizedIndex =
+      ((index % STATE.playlist.length) + STATE.playlist.length) %
+      STATE.playlist.length;
+
+    STATE.currentTrackIndex = normalizedIndex;
+    STATE.audio.src = STATE.playlist[normalizedIndex];
+    STATE.audio.currentTime = 0;
+  };
+
   const playMusic = async () => {
-    if (!STATE.audio || STATE.isMusicPlaying) {
+    if (!STATE.audio) {
       return;
     }
 
     await STATE.audio.play();
     STATE.isMusicPlaying = true;
-    DOM.musicButton.classList.remove("gra_inv__music-button--paused");
-    DOM.musicToggle.setAttribute("aria-pressed", "true");
+    updateMusicUI();
   };
 
   const pauseMusic = () => {
-    if (!STATE.audio || !STATE.isMusicPlaying) {
+    if (!STATE.audio) {
       return;
     }
 
     STATE.audio.pause();
     STATE.isMusicPlaying = false;
-    DOM.musicButton.classList.add("gra_inv__music-button--paused");
-    DOM.musicToggle.setAttribute("aria-pressed", "false");
+    updateMusicUI();
+  };
+
+  const playNextTrack = async () => {
+    setTrack(STATE.currentTrackIndex + 1);
+
+    try {
+      await playMusic();
+    } catch (error) {
+      console.error("Không thể phát bài hát tiếp theo:", error);
+      pauseMusic();
+      throw error;
+    }
   };
 
   STATE.playMusic = async () => {
@@ -450,18 +585,44 @@ function initMusicPlayer() {
   STATE.pauseMusic = pauseMusic;
 
   DOM.musicToggle.addEventListener("click", async () => {
-    if (STATE.isMusicPlaying) {
-      pauseMusic();
-      return;
-    }
-
     try {
-      await playMusic();
+      await playNextTrack();
     } catch (error) {
-      console.error("Không thể phát nhạc:", error);
-      pauseMusic();
+      console.error("Không thể chuyển bài:", error);
     }
   });
+
+  if (DOM.musicPlayPause) {
+    DOM.musicPlayPause.addEventListener("click", async () => {
+      if (STATE.isMusicPlaying) {
+        pauseMusic();
+        return;
+      }
+
+      try {
+        await playMusic();
+      } catch (error) {
+        console.error("Không thể phát nhạc:", error);
+        pauseMusic();
+      }
+    });
+  }
+
+  STATE.audio.addEventListener("ended", () => {
+    playNextTrack().catch((error) => {
+      console.error("Không thể tự chuyển sang bài tiếp theo:", error);
+      pauseMusic();
+    });
+  });
+
+  STATE.audio.addEventListener("error", () => {
+    console.error("Không thể tải file nhạc hiện tại.");
+    pauseMusic();
+    setTrack(STATE.currentTrackIndex + 1);
+    updateMusicUI();
+  });
+
+  updateMusicUI();
 
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
@@ -621,7 +782,11 @@ function initKeyboardNavigation() {
 
     // M to toggle music
     if (e.key === "m" || e.key === "M") {
-      DOM.musicToggle.click();
+      if (DOM.musicPlayPause) {
+        DOM.musicPlayPause.click();
+      } else if (DOM.musicToggle) {
+        DOM.musicToggle.click();
+      }
     }
   });
 }
@@ -675,11 +840,19 @@ const INVITATION_DATA_SOURCES = [
   "data/invitations.json",
 ];
 
-function getInvitationSlug() {
+function getGuestSlugFromQuery() {
   const params = new URLSearchParams(window.location.search);
   const fromQuery = params.get("guest");
+  if (!fromQuery) {
+    return "";
+  }
+  return decodeURIComponent(fromQuery.trim().toLowerCase());
+}
+
+function getInvitationSlug() {
+  const fromQuery = getGuestSlugFromQuery();
   if (fromQuery) {
-    return decodeURIComponent(fromQuery.trim().toLowerCase());
+    return fromQuery;
   }
 
   const hash = window.location.hash.replace("#", "").trim().toLowerCase();
@@ -743,19 +916,28 @@ async function loadInvitationData() {
     const payload = await fetchInvitationPayload();
     const guests = payload.guests || {};
     const defaultKey = payload.defaultGuest || DEFAULT_INVITATION.slug;
+    const queryGuestSlug = getGuestSlugFromQuery();
+    const hasValidQueryGuest = Boolean(
+      queryGuestSlug &&
+      Object.prototype.hasOwnProperty.call(guests, queryGuestSlug),
+    );
     const selected = guests[slug] || guests[defaultKey];
 
     if (!selected) {
       console.warn(
         `Khong tim thay guest slug "${slug}", dung du lieu mac dinh.`,
       );
-      return { ...DEFAULT_INVITATION, slug };
+      return { ...DEFAULT_INVITATION, slug, hasValidQueryGuest };
     }
 
-    return { ...DEFAULT_INVITATION, ...selected, slug };
+    return { ...DEFAULT_INVITATION, ...selected, slug, hasValidQueryGuest };
   } catch (error) {
     console.warn("Khong the tai du lieu JSON, dung du lieu mac dinh.", error);
-    return { ...DEFAULT_INVITATION, slug: DEFAULT_INVITATION.slug };
+    return {
+      ...DEFAULT_INVITATION,
+      slug: DEFAULT_INVITATION.slug,
+      hasValidQueryGuest: false,
+    };
   }
 }
 
@@ -784,7 +966,18 @@ function applyInvitationData(invitation) {
   }
 
   if (DYNAMIC.name) {
-    DYNAMIC.name.textContent = invitation.name || DEFAULT_INVITATION.name;
+    const hostName =
+      invitation.hostName ||
+      DEFAULT_INVITATION.hostName ||
+      DEFAULT_INVITATION.name;
+    DYNAMIC.name.textContent = hostName;
+  }
+
+  if (DYNAMIC.invitee) {
+    const inviteeName =
+      invitation.inviteeName ||
+      (invitation.hasValidQueryGuest ? invitation.name : "");
+    setInviteeGreeting(inviteeName);
   }
 
   if (DYNAMIC.age) {
@@ -892,6 +1085,7 @@ async function init() {
     const invitation = await loadInvitationData();
     applyInvitationData(invitation);
     updateMetaTags(invitation);
+    initWelcomeOverlay(invitation);
     CONFIG.eventDate = resolveEventDate(invitation);
 
     // Core features

@@ -93,6 +93,142 @@ html {
   overscroll-behavior: none;
 }
 
+.gra_inv__body--locked {
+  overflow: hidden;
+}
+
+.gra_inv__welcome-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  display: grid;
+  place-items: center;
+  padding: var(--gra_inv-spacing-lg);
+  background:
+    radial-gradient(
+      circle at 20% 20%,
+      rgba(59, 130, 246, 0.3) 0%,
+      transparent 45%
+    ),
+    radial-gradient(
+      circle at 80% 80%,
+      rgba(147, 197, 253, 0.22) 0%,
+      transparent 50%
+    ),
+    rgba(10, 16, 38, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity var(--gra_inv-transition-normal),
+    visibility var(--gra_inv-transition-normal);
+}
+
+.gra_inv__welcome-overlay--hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.gra_inv__welcome-card {
+  width: min(100%, 430px);
+  background: linear-gradient(
+    135deg,
+    rgba(22, 33, 62, 0.96) 0%,
+    rgba(26, 26, 46, 0.97) 100%
+  );
+  border: 1px solid rgba(147, 197, 253, 0.25);
+  border-radius: var(--gra_inv-radius-lg);
+  box-shadow:
+    var(--gra_inv-shadow-lg),
+    0 0 50px rgba(59, 130, 246, 0.2);
+  padding: var(--gra_inv-spacing-xl);
+  color: #f8fbff;
+}
+
+.gra_inv__welcome-title {
+  font-family: var(--gra_inv-font-display);
+  font-size: 2rem;
+  color: #f8fbff;
+  text-shadow: 0 0 18px rgba(59, 130, 246, 0.28);
+  letter-spacing: 0.02em;
+  margin-bottom: var(--gra_inv-spacing-sm);
+}
+
+.gra_inv__welcome-subtitle {
+  color: rgba(219, 234, 254, 0.95);
+  line-height: 1.6;
+  margin-bottom: var(--gra_inv-spacing-lg);
+}
+
+.gra_inv__welcome-input {
+  width: 100%;
+  border: 1px solid rgba(147, 197, 253, 0.35);
+  border-radius: var(--gra_inv-radius-md);
+  background: rgba(59, 130, 246, 0.07);
+  color: #ffffff;
+  caret-color: #93c5fd;
+  -webkit-text-fill-color: #ffffff;
+  font-family: var(--gra_inv-font-primary);
+  font-size: 1rem;
+  padding: 0.95rem 1rem;
+  outline: none;
+  transition:
+    border-color var(--gra_inv-transition-fast),
+    box-shadow var(--gra_inv-transition-fast),
+    background-color var(--gra_inv-transition-fast);
+}
+
+.gra_inv__welcome-input::placeholder {
+  color: rgba(219, 234, 254, 0.72);
+}
+
+.gra_inv__welcome-input:focus {
+  border-color: var(--gra_inv-color-primary);
+  background: rgba(59, 130, 246, 0.11);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.22);
+}
+
+.gra_inv__welcome-input:-webkit-autofill,
+.gra_inv__welcome-input:-webkit-autofill:hover,
+.gra_inv__welcome-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #ffffff;
+  box-shadow: 0 0 0 1000px rgba(21, 35, 75, 0.9) inset;
+}
+
+.gra_inv__welcome-hint {
+  min-height: 1.4rem;
+  margin-top: var(--gra_inv-spacing-sm);
+  margin-bottom: var(--gra_inv-spacing-sm);
+  font-size: 0.9rem;
+  color: #fbbf24;
+}
+
+.gra_inv__welcome-button {
+  width: 100%;
+  margin-top: var(--gra_inv-spacing-sm);
+  border: none;
+  border-radius: var(--gra_inv-radius-md);
+  padding: 0.95rem 1rem;
+  background: var(--gra_inv-gradient-primary);
+  color: var(--gra_inv-color-dark);
+  font-family: var(--gra_inv-font-primary);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: transform var(--gra_inv-transition-fast);
+}
+
+.gra_inv__welcome-button:hover {
+  transform: translateY(-2px);
+}
+
+.gra_inv__welcome-button:active {
+  transform: translateY(0);
+}
+
 .gra_inv__background {
   position: fixed;
   top: 0;
@@ -856,6 +992,34 @@ html {
   }
 }
 
+.gra_inv__card-invitee-section {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--gra_inv-spacing-xl);
+  animation: gra_inv-fade-in 1s ease 0.45s backwards;
+}
+
+.gra_inv__card-invitee-pill {
+  display: inline-block;
+  text-align: center;
+  padding: 0.72rem 1.1rem;
+  border-radius: 999px; 
+  border: 1px solid rgba(147, 197, 253, 0.4);
+  background: linear-gradient(
+    120deg,
+    rgba(59, 130, 246, 0.18),
+    rgba(59, 130, 246, 0.08)
+  );
+  color: #dbeafe;
+  font-family: var(--gra_inv-font-primary);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  box-shadow: 0 10px 24px rgba(59, 130, 246, 0.18);
+  max-width: 100%;
+  word-break: break-word;
+}
+
 /* Details Section */
 .gra_inv__card-details-section {
   margin-bottom: var(--gra_inv-spacing-xl);
@@ -1245,6 +1409,38 @@ html {
   z-index: 1000;
 }
 
+.gra_inv__music-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--gra_inv-spacing-sm);
+}
+
+.gra_inv__music-control-button {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--gra_inv-radius-full);
+  border: 1px solid rgba(147, 197, 253, 0.35);
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--gra_inv-color-light);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--gra_inv-shadow-md);
+  cursor: pointer;
+  transition: all var(--gra_inv-transition-fast);
+}
+
+.gra_inv__music-control-button:hover {
+  transform: translateY(-2px);
+  border-color: var(--gra_inv-color-primary);
+  background: rgba(59, 130, 246, 0.26);
+}
+
+.gra_inv__music-control-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
 .gra_inv__music-button {
   position: relative;
   width: 70px;
@@ -1395,6 +1591,10 @@ html {
     font-size: 2.5rem;
   }
 
+  .gra_inv__card-invitee-pill {
+    font-size: 0.95rem;
+  }
+
   .gra_inv__countdown {
     grid-template-columns: repeat(2, 1fr);
     gap: var(--gra_inv-spacing-sm);
@@ -1423,9 +1623,26 @@ html {
     height: 60px;
   }
 
+  .gra_inv__music-control-button {
+    width: 46px;
+    height: 46px;
+  }
+
+  .gra_inv__music-control-icon {
+    font-size: 1rem;
+  }
+
   .gra_inv__music-icon {
     width: 25px;
     height: 25px;
+  }
+
+  .gra_inv__welcome-card {
+    padding: var(--gra_inv-spacing-lg);
+  }
+
+  .gra_inv__welcome-title {
+    font-size: 1.7rem;
   }
 }
 
@@ -1470,6 +1687,15 @@ html {
     font-size: 2rem;
   }
 
+  .gra_inv__card-invitee-section {
+    margin-bottom: var(--gra_inv-spacing-lg);
+  }
+
+  .gra_inv__card-invitee-pill {
+    font-size: 0.88rem;
+    padding: 0.62rem 0.9rem;
+  }
+
   .gra_inv__card-message {
     font-size: 1.1rem;
     padding: var(--gra_inv-spacing-md);
@@ -1511,9 +1737,30 @@ html {
     height: 50px;
   }
 
+  .gra_inv__music-control-button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .gra_inv__music-control-icon {
+    font-size: 0.95rem;
+  }
+
   .gra_inv__music-icon {
     width: 20px;
     height: 20px;
+  }
+
+  .gra_inv__welcome-overlay {
+    padding: var(--gra_inv-spacing-md);
+  }
+
+  .gra_inv__welcome-title {
+    font-size: 1.5rem;
+  }
+
+  .gra_inv__welcome-subtitle {
+    font-size: 0.95rem;
   }
 }
 
@@ -1557,7 +1804,8 @@ html {
 
 .gra_inv__card-button:focus-visible,
 .gra_inv__card-close:focus-visible,
-.gra_inv__music-button:focus-visible {
+.gra_inv__music-button:focus-visible,
+.gra_inv__music-control-button:focus-visible {
   outline: 3px solid var(--gra_inv-color-primary);
   outline-offset: 4px;
 }

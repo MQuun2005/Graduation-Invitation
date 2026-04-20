@@ -26,7 +26,49 @@
     <link rel="stylesheet" href="style.css" />
   </head>
 
-  <body class="gra_inv__body">
+  <body class="gra_inv__body gra_inv__body--locked">
+    <!-- Welcome Screen Overlay -->
+    <div
+      class="gra_inv__welcome-overlay"
+      id="welcomeOverlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="welcomeTitle"
+      aria-hidden="false"
+    >
+      <form class="gra_inv__welcome-card" id="welcomeForm" novalidate>
+        <h2 class="gra_inv__welcome-title" id="welcomeTitle">Tên của bạn iu</h2>
+        <p class="gra_inv__welcome-subtitle">
+          Mình muốn gửi lời mời thật riêng tư đến bạn.
+        </p>
+        <label class="gra_inv__sr-only" for="welcomeNameInput"
+          >Tên khách mời</label
+        >
+        <input
+          class="gra_inv__welcome-input"
+          id="welcomeNameInput"
+          name="guestName"
+          type="text"
+          placeholder="Ví dụ: Nguyễn Văn A"
+          autocomplete="name"
+          maxlength="60"
+          required
+        />
+        <p
+          class="gra_inv__welcome-hint"
+          id="welcomeHint"
+          aria-live="polite"
+        ></p>
+        <button
+          class="gra_inv__welcome-button"
+          id="welcomeSubmit"
+          type="submit"
+        >
+          Vào xem thiệp
+        </button>
+      </form>
+    </div>
+
     <!-- Particles Background -->
     <div class="gra_inv__particles" id="particles"></div>
 
@@ -217,6 +259,17 @@
                       >
                     </p>
                   </div>
+                </section>
+
+                <section
+                  class="gra_inv__card-invitee-section"
+                  aria-live="polite"
+                >
+                  <p class="gra_inv__card-invitee-pill" id="guestInvitee">
+                    Thân mời bạn iu: Bạn, đến làm diễn viên quần chúng, nhan sắc
+                    của bạn sẽ làm nền giúp bức ảnh cầm bằng của tui thêm phần
+                    lấp lánh! 😘
+                  </p>
                 </section>
 
                 <!-- Details Section -->
@@ -547,31 +600,48 @@
 
     <!-- Music Control -->
     <aside class="gra_inv__music">
-      <button
-        class="gra_inv__music-button gra_inv__music-button--paused"
-        id="musicToggle"
-        aria-label="Bat tat nhac nen"
-        data-audio-src="../music/quangtaocaibuong.mp3"
-      >
-        <span class="gra_inv__music-icon" id="musicIcon">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
+      <div class="gra_inv__music-controls">
+        <button
+          class="gra_inv__music-control-button"
+          id="musicPlayPause"
+          aria-label="Phát nhạc"
+          aria-pressed="false"
+          title="Phát hoặc tạm dừng"
+        >
+          <span
+            class="gra_inv__music-control-icon"
+            id="musicPlayPauseIcon"
+            aria-hidden="true"
+            >&#9658;</span
           >
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-            <path
-              d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"
-            ></path>
-          </svg>
-        </span>
-        <span class="gra_inv__music-wave">
-          <span class="gra_inv__music-wave-bar"></span>
-          <span class="gra_inv__music-wave-bar"></span>
-          <span class="gra_inv__music-wave-bar"></span>
-        </span>
-      </button>
+        </button>
+
+        <button
+          class="gra_inv__music-button gra_inv__music-button--paused"
+          id="musicToggle"
+          aria-label="Chuyển bài hát tiếp theo"
+          title="Chuyển bài hát"
+        >
+          <span class="gra_inv__music-icon" id="musicIcon">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path
+                d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"
+              ></path>
+            </svg>
+          </span>
+          <span class="gra_inv__music-wave">
+            <span class="gra_inv__music-wave-bar"></span>
+            <span class="gra_inv__music-wave-bar"></span>
+            <span class="gra_inv__music-wave-bar"></span>
+          </span>
+        </button>
+      </div>
     </aside>
 
     <!-- Canvas for Advanced Effects -->
