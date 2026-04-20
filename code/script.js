@@ -18,7 +18,7 @@ const DEFAULT_INVITATION = {
   mapUrl: "https://maps.app.goo.gl/PGUwVH8ErdPtQKGa7",
   message:
     "Rất mong bạn đến chung vui và chứng kiến khoảnh khắc tốt nghiệp đáng nhớ của mình.",
-  image: "../img/MinhQuun.jpg",
+  image: "img/minhquun.jpg",
   metaTitle: "Thiệp mời tốt nghiệp của Võ Nguyễn Minh Quân",
   metaDescription:
     "Thiệp mời lễ tốt nghiệp với hiệu ứng hiện đại và thông tin đầy đủ.",
@@ -46,6 +46,40 @@ const CONFIG = {
     pink: "#38bdf8",
   },
 };
+
+const APP_BASE_PATH = resolveAppBasePath();
+
+function resolveAppBasePath() {
+  const segments = window.location.pathname.split("/").filter(Boolean);
+  const codeSegmentIndex = segments.indexOf("code");
+  let baseSegments;
+
+  if (codeSegmentIndex >= 0) {
+    baseSegments = segments.slice(0, codeSegmentIndex);
+  } else {
+    baseSegments = [...segments];
+    const lastSegment = baseSegments[baseSegments.length - 1] || "";
+    if (/\.[a-z0-9]+$/i.test(lastSegment)) {
+      baseSegments.pop();
+    }
+  }
+
+  return baseSegments.length ? `/${baseSegments.join("/")}/` : "/";
+}
+
+function normalizeProjectPath(pathValue) {
+  let normalized = String(pathValue).trim().replace(/\\/g, "/");
+
+  while (normalized.startsWith("./")) {
+    normalized = normalized.slice(2);
+  }
+
+  while (normalized.startsWith("../")) {
+    normalized = normalized.slice(3);
+  }
+
+  return normalized.replace(/^\/+/, "");
+}
 
 // ===================================
 // State Management
@@ -496,6 +530,8 @@ function initMusicPlayer() {
   STATE.audio.loop = false;
   STATE.audio.preload = "auto";
   STATE.audio.volume = 0.4;
+  let consecutiveLoadFailures = 0;
+  let keepPlaybackActive = false;
 
   const updateMusicUI = () => {
     if (STATE.isMusicPlaying) {
@@ -545,7 +581,9 @@ function initMusicPlayer() {
       return;
     }
 
+    keepPlaybackActive = true;
     await STATE.audio.play();
+    consecutiveLoadFailures = 0;
     STATE.isMusicPlaying = true;
     updateMusicUI();
   };
@@ -555,6 +593,7 @@ function initMusicPlayer() {
       return;
     }
 
+    keepPlaybackActive = false;
     STATE.audio.pause();
     STATE.isMusicPlaying = false;
     updateMusicUI();
@@ -616,10 +655,24 @@ function initMusicPlayer() {
   });
 
   STATE.audio.addEventListener("error", () => {
-    console.error("Không thể tải file nhạc hiện tại.");
-    pauseMusic();
+    const failedSource = STATE.audio?.currentSrc || STATE.audio?.src || "";
+    console.error(`Không thể tải file nhạc hiện tại: ${failedSource}`);
+
+    consecutiveLoadFailures += 1;
+    if (consecutiveLoadFailures >= STATE.playlist.length) {
+      console.error("Không thể tải bất kỳ bài hát nào trong playlist.");
+      pauseMusic();
+      return;
+    }
+
     setTrack(STATE.currentTrackIndex + 1);
     updateMusicUI();
+
+    if (keepPlaybackActive) {
+      playMusic().catch((error) => {
+        console.error("Không thể tự khôi phục phát nhạc:", error);
+      });
+    }
   });
 
   updateMusicUI();
@@ -835,9 +888,9 @@ function initAccessibility() {
 // Data Loading & Binding
 // ===================================
 const INVITATION_DATA_SOURCES = [
-  "../data/invitations.json",
-  "/data/invitations.json",
+  resolveAssetPath("data/invitations.json"),
   "data/invitations.json",
+  "../data/invitations.json",
 ];
 
 function getGuestSlugFromQuery() {
@@ -893,20 +946,16 @@ function resolveAssetPath(pathValue) {
     return "";
   }
 
-  if (
-    /^(https?:)?\/\//i.test(pathValue) ||
-    pathValue.startsWith("/") ||
-    pathValue.startsWith("../") ||
-    pathValue.startsWith("data:")
-  ) {
+  if (/^(https?:)?\/\//i.test(pathValue) || pathValue.startsWith("data:")) {
     return pathValue;
   }
 
-  if (pathValue.startsWith("img/") || pathValue.startsWith("music/")) {
-    return `../${pathValue}`;
+  const normalizedPath = normalizeProjectPath(pathValue);
+  if (!normalizedPath) {
+    return "";
   }
 
-  return pathValue;
+  return `${APP_BASE_PATH}${normalizedPath}`;
 }
 
 async function loadInvitationData() {
