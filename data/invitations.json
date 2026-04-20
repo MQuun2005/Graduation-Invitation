@@ -15,7 +15,7 @@
       ],
       "mapUrl": "https://maps.app.goo.gl/PGUwVH8ErdPtQKGa7",
       "message": "Rất mong bạn đến chung vui và chứng kiến khoảnh khắc tốt nghiệp đáng nhớ của mình.",
-      "image": "img/MinhQuun.jpg",
+      "image": "./img/minhquun.jpg",
       "metaTitle": "MinhQuun's graduation invitation",
       "metaDescription": "Thiệp mời lễ tốt nghiệp dành riêng cho Võ Nguyễn Minh Quân.",
       "sharePath": "index.html?guest=vo-nguyen-minh-quan"
