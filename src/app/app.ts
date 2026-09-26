@@ -1,3 +1,22 @@
+// @ts-nocheck
+import { Component, AfterViewInit, OnDestroy } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  templateUrl: './app.html',
+  styleUrls: ['./app.css']
+})
+export class App implements AfterViewInit, OnDestroy {
+  ngAfterViewInit(): void {
+    initGraduation();
+  }
+
+  ngOnDestroy(): void {
+    destroyGraduation();
+  }
+}
+
 // ===================================
 // Invitation Defaults
 // ===================================
@@ -50,6 +69,13 @@ const CONFIG = {
 const APP_BASE_PATH = resolveAppBasePath();
 
 function resolveAppBasePath() {
+  const baseEl = document.querySelector('base');
+  if (baseEl && baseEl.getAttribute('href')) {
+    let href = baseEl.getAttribute('href');
+    if (!href.endsWith('/')) href += '/';
+    return href;
+  }
+
   const segments = window.location.pathname.split("/").filter(Boolean);
   const codeSegmentIndex = segments.indexOf("code");
   let baseSegments;
@@ -104,7 +130,11 @@ const STATE = {
 // ===================================
 // DOM Elements
 // ===================================
-const DOM = {
+let DOM: any = {};
+let DYNAMIC: any = {};
+
+function initDOMElements() {
+DOM = {
   card: document.getElementById("card"),
   cardInner: document.querySelector(".gra_inv__card-inner"),
   cardBack: document.querySelector(".gra_inv__card-back"),
@@ -136,7 +166,7 @@ const DOM = {
   },
 };
 
-const DYNAMIC = {
+DYNAMIC = {
   avatar: document.getElementById("guestAvatar"),
   name: document.getElementById("guestName"),
   invitee: document.getElementById("guestInvitee"),
@@ -148,6 +178,8 @@ const DYNAMIC = {
   message: document.getElementById("guestMessage"),
 };
 
+
+}
 function setInviteeGreeting(nameValue) {
   if (!DYNAMIC.invitee) {
     return;
@@ -300,7 +332,7 @@ function initCanvas() {
       return conf.isAlive();
     });
 
-    requestAnimationFrame(animate);
+    STATE.animationFrameId = requestAnimationFrame(animate);
   }
 
   animate();
@@ -502,7 +534,7 @@ function initCountdown() {
   }
 
   updateCountdown();
-  setInterval(updateCountdown, 1000);
+  STATE.countdownInterval = setInterval(updateCountdown, 1000);
 }
 
 // ===================================
@@ -1127,7 +1159,8 @@ function resolveEventDate(invitation) {
 // ===================================
 // Initialize Application
 // ===================================
-async function init() {
+async function initGraduation() {
+    initDOMElements();
   try {
     console.log("Initializing graduation invitation...");
 
@@ -1160,21 +1193,21 @@ async function init() {
 // ===================================
 // Start Application
 // ===================================
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init);
-} else {
-  init();
-}
 
-// ===================================
-// Export for testing (optional)
-// ===================================
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = {
-    CONFIG,
-    STATE,
-    Particle,
-    Confetti,
-    createConfettiBurst,
-  };
+function destroyGraduation() {
+  try {
+    if (STATE.audio) {
+      STATE.audio.pause();
+      STATE.audio = null;
+    }
+    if (STATE.animationFrameId) {
+      cancelAnimationFrame(STATE.animationFrameId);
+    }
+    if (STATE.countdownInterval) {
+      clearInterval(STATE.countdownInterval);
+    }
+    STATE.isMusicPlaying = false;
+  } catch (err) {
+    console.warn('Error during graduation invitation cleanup:', err);
+  }
 }
